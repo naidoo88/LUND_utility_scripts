@@ -27,6 +27,8 @@ def extract_OSG(
         output_file = Path(output_files_path) / f"{output_files_name}_{ii:08}.hipo"
         copy(file, output_file)
 
+    return
+
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(
