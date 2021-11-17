@@ -2,6 +2,8 @@
 Parse LUND files into a pandas dataframe.
 For use in notebooks.
 
+WARNING - uses a LOT of memory as is....
+
 """
 
 __author__ = "Paul Naidoo"
@@ -10,6 +12,7 @@ __date__ = "November 2021"
 import uproot
 # import argparse
 import numpy as np
+from numpy import uint8, uint16, uint32, float16, float32
 import pandas as pd
 from pathlib import Path
 
@@ -19,13 +22,42 @@ def parse_LUND(
     parse_N: int = None
     ):
 
+    ## work in progress to handle memory
+    # columns = np.dtype([
+    #     ('event_id', np.uint32),
+    #     ('n_parts', np.uint8),
+    #     ('target_A', np.uint8),
+    #     ('target_Z', np.uint8),
+    #     ('target_pol', np.float16),
+    #     ('beam_pol', np.float16),
+    #     ('beam_type', np.uint8),
+    #     ('beam_E', np.float16),
+    #     ('inter_nuc_pid', np.uint16),
+    #     ('proc_id', np.uint8),
+    #     ('event_weight', np.float32),
+    #     ('index', np.uint8),
+    #     ('life_t', np.float16),
+    #     ('type', np.uint8),
+    #     ('pid', np.uint16),
+    #     ('parent_idx', np.uint8),
+    #     ('daughter_idx', np.uint8),
+    #     ('px', np.float32),
+    #     ('py', np.float32),
+    #     ('pz', np.float32),
+    #     ('pE', np.float32),
+    #     ('mass', np.float32),
+    #     ('x_vert', np.float32),
+    #     ('y_vert', np.float32),
+    #     ('z_vert', np.float32)
+    # ])
+
     N_events = 0
     N_files = 0
 
     source_files = Path(source_files_path).glob(selection_regex)
 
+    # parsed_particles = np.empty(0, columns)
     parsed_particles = []
-
     for file in source_files:
         N_files+=1
         with open(file, 'r') as current_file:
@@ -61,17 +93,17 @@ def is_header(line):
 def parse_header(line, event_id):
     entries = line.split()
     event_header = {
-        'event_id': int(event_id),
-        'n_parts': int(entries[0]),
-        'target_A': int(entries[1]), 
-        'target_Z': int(entries[2]), 
-        'target_pol': float(entries[3]), 
-        'beam_pol': float(entries[4]), 
-        'beam_type': int(entries[5]), 
-        'beam_E': float(entries[6]), 
-        'inter_nuc_id': int(entries[7]), 
-        'proc_id': int(entries[8]), 
-        'event_weight': float(entries[9])
+        'event_id': uint32(event_id),
+        'n_parts': uint8(entries[0]),
+        'target_A': uint8(entries[1]), 
+        'target_Z': uint8(entries[2]), 
+        'target_pol': float16(entries[3]), 
+        'beam_pol': float16(entries[4]), 
+        'beam_type': uint8(entries[5]), 
+        'beam_E': float16(entries[6]), 
+        'inter_nuc_pid': uint16(entries[7]), 
+        'proc_id': uint8(entries[8]), 
+        'event_weight': float32(entries[9])
     }
 
     return event_header
@@ -79,20 +111,20 @@ def parse_header(line, event_id):
 def parse_particle(line, event_header):
     entries = line.split()
     particle_buff = {
-        'index': int(entries[0]), 
-        'life_t': float(entries[1]), 
-        'type': int(entries[2]), 
-        'pid': int(entries[3]), 
-        'parent_idx': int(entries[4]), 
-        'daughter_idx': int(entries[5]), 
-        'px': float(entries[6]), 
-        'py': float(entries[7]), 
-        'pz': float(entries[8]), 
-        'pE': float(entries[9]), 
-        'mass': float(entries[10]), 
-        'x_vert': float(entries[11]), 
-        'y_vert': float(entries[12]), 
-        'z_vert': float(entries[13])
+        'index': uint8(entries[0]), 
+        'life_t': float16(entries[1]), 
+        'type': uint8(entries[2]), 
+        'pid': uint16(entries[3]), 
+        'parent_idx': uint8(entries[4]), 
+        'daughter_idx': uint8(entries[5]), 
+        'px': float32(entries[6]), 
+        'py': float32(entries[7]), 
+        'pz': float32(entries[8]), 
+        'pE': float32(entries[9]), 
+        'mass': float32(entries[10]), 
+        'x_vert': float32(entries[11]), 
+        'y_vert': float32(entries[12]), 
+        'z_vert': float32(entries[13])
     }
     #combine header/particle data
     particle = {**event_header, **particle_buff}
