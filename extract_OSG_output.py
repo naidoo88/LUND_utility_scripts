@@ -60,5 +60,5 @@ if __name__ == '__main__':
     extract_OSG(
         OSG_job_path=args.input_path,
         output_files_path=args.output_path,
-        output_files_name=args.output_stub
+        output_files_name=args.output_name
     )
