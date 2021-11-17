@@ -15,40 +15,40 @@ from pathlib import Path
 
 def parse_LUND(
     source_files_path: str, 
-    output_file_path: str, 
-    selection_regex: str = "*"
-    ) -> None:
+    selection_regex: str = "*",
+    parse_N: int = None
+    ):
 
     N_events = 0
     N_files = 0
 
     source_files = Path(source_files_path).glob(selection_regex)
 
-    with uproot.recreate(output_file_path) as root_file:
-        # root_file.mktree("LUND")
-        for file in source_files:
-            parsed_events = []
-            N_files+=1
+    parsed_particles = []
 
-            print(f"\nProcessing #{N_files}: {file}")
+    for file in source_files:
+        N_files+=1
+        with open(file, 'r') as current_file:
+            for line in current_file:
+                # check if event header
+                if is_header(line) is True:
+                    #new header dict for event
+                    event_header = parse_header(line, event_id=N_events)
+                    N_events+=1
 
-            with open(file, 'r') as current_file:
-                for line in current_file:
-                    # check if event header
-                    if is_header(line) is True:
-                        #new header dict for event
-                        event_header = parse_header(line, event_id=N_events)
-                        N_events+=1
-
-                    else:
-                        particle = parse_particle(line, event_header)
-                        parsed_events.append(particle)
-        
-            #at the end of each file, convert list to df, and write to file.
-            lund_df = pd.DataFrame(parsed_events)
-
-
-        print(f"Done.\n {N_files} Processed.\n {N_events} written.")
+                    if parse_N == N_events:
+                        lund_df = pd.DataFrame(parsed_particles)
+                        print(f"Done.\n {N_files} processed.\n {N_events} parsed.")
+                        return lund_df
+                        
+                else:
+                    particle = parse_particle(line, event_header)
+                    parsed_particles.append(particle)
+    
+    #convert list to df, and write to file.
+    lund_df = pd.DataFrame(parsed_particles)
+    print(f"Done.\n {N_files} processed.\n {N_events} parsed.")
+    return lund_df
 
 def is_header(line):
     N_entries = len(line.split())
@@ -136,5 +136,5 @@ if __name__ == '__main__':
     # )
     parse_LUND(
         source_files_path="/w/work3/home/pauln/sim/15_pi0_genfiles/",
-        output_file_path="/home/pauln/lund.root"
+        parse_N = 10
     )
